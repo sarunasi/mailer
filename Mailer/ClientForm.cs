@@ -39,7 +39,7 @@ namespace Mailer
 
         private void UpdateEmailList()
         {
-            //dataGridViewEmailList.Rows.Add("1", "asdf");
+            dataGridViewEmailList.Rows.Add("1", "asdf");
         }
 
         private void buttonBack_Click(object sender, EventArgs e)

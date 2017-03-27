@@ -15,6 +15,8 @@ namespace Mailer
         private StreamWriter writer;
         private StreamReader reader;
 
+        private const string Error = "-ERR";
+
         public Pop3Communicator()
         {
 
@@ -37,7 +39,28 @@ namespace Mailer
 
         public List<string> GetEmails()
         {
-            throw new NotImplementedException();
+            string list = Write("LIST");
+
+            if (list.Contains(Error))
+            {
+                throw new IOException("Unable to get emails from the server");
+            }
+            else
+            {
+                string[] words = list.Split(' ');
+
+                int totalEmails = Int32.Parse(words[1]);
+                List<string> emails = new List<string>();
+
+                for (int i = 1; i <= totalEmails; i++)
+                {
+                    emails.Add(Write("RETR " + i.ToString()));
+                }
+
+                return emails;
+
+            }
+
         }
 
         public string LogIn(string username, string password)
