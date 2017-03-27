@@ -51,6 +51,7 @@
     <Compile Include="ClientForm.Designer.cs">
       <DependentUpon>ClientForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Email.cs" />
     <Compile Include="EmailCommunicator.cs" />
     <Compile Include="LogInForm.cs">
       <SubType>Form</SubType>
