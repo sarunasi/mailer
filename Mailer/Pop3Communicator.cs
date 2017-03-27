@@ -35,6 +35,11 @@ namespace Mailer
             return reader.ReadLine();
         }
 
+        public List<string> GetEmails()
+        {
+            throw new NotImplementedException();
+        }
+
         public string LogIn(string username, string password)
         {
             Write("USER " + username);

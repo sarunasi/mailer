@@ -1,4 +1,6 @@
-﻿namespace Mailer
+﻿using System.Collections.Generic;
+
+namespace Mailer
 {
     public interface EmailCommunicator
     {
@@ -7,6 +9,8 @@
         string Write(string content);
 
         string LogIn(string username, string password);
+
+        List<string> GetEmails();
 
         string Quit();
 
