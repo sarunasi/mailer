@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Mailer
 {
-    class Pop3Communicator : EmailCommunicator
+    class Pop3Communicator : IEmailCommunicator
     {
         private StreamWriter writer;
         private StreamReader reader;
@@ -37,9 +38,11 @@ namespace Mailer
             return reader.ReadLine();
         }
 
-        public List<string> GetEmails()
+        public List<ReceivedMail> GetEmails()
         {
             string list = Write("LIST");
+
+
 
             if (list.Contains(Error))
             {
@@ -47,14 +50,36 @@ namespace Mailer
             }
             else
             {
+
                 string[] words = list.Split(' ');
 
+                while ((list = reader.ReadLine()) != ".")
+                {
+
+                }
+
                 int totalEmails = Int32.Parse(words[1]);
-                List<string> emails = new List<string>();
+                Debug.WriteLine("Total emails: " + totalEmails);
+
+                var emails = new List<ReceivedMail>();
+                EmailDecoder decoder = new EmailDecoder();
 
                 for (int i = 1; i <= totalEmails; i++)
                 {
-                    emails.Add(Write("RETR " + i.ToString()));
+                    Debug.WriteLine(Write("RETR " + i.ToString()));
+
+                    StringBuilder header = new StringBuilder();
+                    string nextLine;
+                    while ((nextLine = reader.ReadLine()) != ".")
+                    {
+
+                        header.AppendLine(nextLine);
+
+                    }
+
+
+                    emails.Add(decoder.Decode(header.ToString()));
+
                 }
 
                 return emails;

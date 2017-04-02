@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Net.Mail;
 
 namespace Mailer
 {
-    public interface EmailCommunicator
+    public interface IEmailCommunicator
     {
         string Connect(string server, int port);
 
@@ -10,7 +11,7 @@ namespace Mailer
 
         string LogIn(string username, string password);
 
-        List<string> GetEmails();
+        List<ReceivedMail> GetEmails();
 
         string Quit();
 

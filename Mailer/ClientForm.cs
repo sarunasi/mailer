@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -18,11 +20,24 @@ namespace Mailer
 {
     public partial class ClientForm : Form
     {
-        private EmailCommunicator email;
+        private List<ReceivedMail> emails = new List<ReceivedMail>();
+        private DataSaver<ReceivedMail> emailSaver = new DataSaver<ReceivedMail>();
+
+        private IEmailCommunicator email;
 
         public ClientForm(String username, String password, String server, String port)
         {
             InitializeComponent();
+
+            try
+            {
+                emails = emailSaver.LoadDataList();
+            }
+            catch(FileNotFoundException ex)
+            {
+                
+            }
+            
 
             labelUsername.Text = username;
 
@@ -39,7 +54,25 @@ namespace Mailer
 
         private void UpdateEmailList()
         {
-            dataGridViewEmailList.Rows.Add("1", "asdf");
+
+            emails.AddRange(email.GetEmails());
+
+            try
+            {
+                foreach (var email in emails)
+                {
+                    dataGridViewEmailList.Rows.Add(email.FromDisplayName + " " + email.FromAddress, email.Subject);
+                }
+            }
+            catch(NullReferenceException ex)
+            {
+
+            }
+
+            
+
+           
+
         }
 
         private void buttonBack_Click(object sender, EventArgs e)
@@ -49,8 +82,11 @@ namespace Mailer
 
         private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            emailSaver.SaveDataList(emails);
             email.Quit();
             Application.Exit();
         }
+
+
     }
 }
