@@ -61,7 +61,9 @@ namespace Mailer
             {
                 foreach (var email in emails)
                 {
-                    dataGridViewEmailList.Rows.Add(email.FromDisplayName + " " + email.FromAddress, email.Subject);
+                    dataGridViewEmailList.Rows.Add(email.FromDisplayName, email.FromAddress, email.Subject);
+
+                    
                 }
             }
             catch(NullReferenceException ex)
@@ -69,24 +71,42 @@ namespace Mailer
 
             }
 
-            
-
-           
 
         }
 
         private void buttonBack_Click(object sender, EventArgs e)
         {
-            email.Quit();
+            //email.Quit();
         }
 
         private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             emailSaver.SaveDataList(emails);
-            email.Quit();
+            //email.Quit();
             Application.Exit();
         }
 
+        private void dataGridViewEmailList_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            
+        }
 
+        private void dataGridViewEmailList_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            //richTextBoxMailView.Text =
+            //webBrowserMailView.DocumentText = "";
+
+            if (this.webBrowserMailView.Document == null)
+            {
+                webBrowserMailView.DocumentText = emails[e.RowIndex].Body;
+            }
+            else
+            {
+                this.webBrowserMailView.Document.OpenNew(true);
+                this.webBrowserMailView.Document.Write(emails[e.RowIndex].Body);
+            }
+
+            webBrowserMailView.Refresh();
+        }
     }
 }

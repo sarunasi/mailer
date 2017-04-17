@@ -96,7 +96,7 @@ namespace Mailer
 
         public string Quit()
         {
-            return Write("QUIT");
+           return Write("QUIT");
         }
 
         public string Write(string content)
