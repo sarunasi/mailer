@@ -18,95 +18,118 @@ using System.Windows.Forms;
 
 namespace Mailer
 {
-    public partial class ClientForm : Form
-    {
-        private List<ReceivedMail> emails = new List<ReceivedMail>();
-        private DataSaver<ReceivedMail> emailSaver = new DataSaver<ReceivedMail>();
+	public partial class ClientForm : Form
+	{
+		private List<ReceivedMail> emails = new List<ReceivedMail>();
+		private DataSaver<ReceivedMail> emailSaver = new DataSaver<ReceivedMail>();
 
-        private IEmailCommunicator email;
+		public Pop3Communicator emailCommunicator;
 
-        public ClientForm(String username, String password, String server, String port)
-        {
-            InitializeComponent();
+		private string username;
 
-            try
-            {
-                emails = emailSaver.LoadDataList();
-            }
-            catch(FileNotFoundException ex)
-            {
-                
-            }
-            
+		public ClientForm(String username, Pop3Communicator emailCommunicator)
+		{
+			InitializeComponent();
 
-            labelUsername.Text = username;
+			this.username = username;
 
-            email = new Pop3Communicator();
+			try
+			{
+				emails = emailSaver.LoadDataList(username);
+			}
+			catch(FileNotFoundException ex)
+			{
+				Debug.WriteLine(ex.Message);
+			}
+			
 
-            Debug.WriteLine(email.Connect(server, Int32.Parse(port)));
+			labelUsername.Text = username;
 
-            Debug.WriteLine(email.LogIn(username, password));
-
-
-            UpdateEmailList();
-
-        }
-
-        private void UpdateEmailList()
-        {
-
-            emails.AddRange(email.GetEmails());
-
-            try
-            {
-                foreach (var email in emails)
-                {
-                    dataGridViewEmailList.Rows.Add(email.FromDisplayName, email.FromAddress, email.Subject);
-
-                    
-                }
-            }
-            catch(NullReferenceException ex)
-            {
-
-            }
+			this.emailCommunicator = emailCommunicator;
 
 
-        }
+			UpdateEmailList();
 
-        private void buttonBack_Click(object sender, EventArgs e)
-        {
-            //email.Quit();
-        }
+		}
 
-        private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            emailSaver.SaveDataList(emails);
-            //email.Quit();
-            Application.Exit();
-        }
+		private void UpdateEmailList()
+		{
+			var newEmails = emailCommunicator.GetEmails();
+			foreach(var email in newEmails)
+			{
+				emails.Insert(0, email);
+			}
 
-        private void dataGridViewEmailList_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            
-        }
+			dataGridViewEmailList.Rows.Clear();
+			foreach (var email in emails)
+			{
+				dataGridViewEmailList.Rows.Add(email.FromDisplayName, email.FromAddress, email.Subject, email.Date);
+			}
+			dataGridViewEmailList.Refresh();
 
-        private void dataGridViewEmailList_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            //richTextBoxMailView.Text =
-            //webBrowserMailView.DocumentText = "";
+		}
 
-            if (this.webBrowserMailView.Document == null)
-            {
-                webBrowserMailView.DocumentText = emails[e.RowIndex].Body;
-            }
-            else
-            {
-                this.webBrowserMailView.Document.OpenNew(true);
-                this.webBrowserMailView.Document.Write(emails[e.RowIndex].Body);
-            }
+		private void buttonBack_Click(object sender, EventArgs e)
+		{
+			emailSaver.SaveDataList(username, emails);
 
-            webBrowserMailView.Refresh();
-        }
-    }
+			var menu = new LogInForm();
+			menu.Show();
+			this.Hide();
+		}
+
+		private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			emailSaver.SaveDataList(username, emails);
+
+			Application.Exit();
+		}
+
+		private void dataGridViewEmailList_CellClick(object sender, DataGridViewCellEventArgs e)
+		{
+			Debug.WriteLine(e.RowIndex);
+
+			if (e.RowIndex >= 0 && e.RowIndex <= dataGridViewEmailList.RowCount)
+			{
+				if (this.webBrowserMailView.Document == null)
+				{
+					webBrowserMailView.DocumentText = emails[e.RowIndex].Body;
+				}
+				else
+				{
+					this.webBrowserMailView.Document.OpenNew(true);
+					this.webBrowserMailView.Document.Write(emails[e.RowIndex].Body);
+				}
+
+				webBrowserMailView.Refresh();
+			}
+
+		}
+
+
+		private void dataGridViewEmailList_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Delete)
+			{
+				if (dataGridViewEmailList.SelectedCells.Count == 1)
+				{
+					int rowIndex = dataGridViewEmailList.SelectedCells[0].RowIndex;
+					emails.RemoveAt(rowIndex);
+					dataGridViewEmailList.Rows.RemoveAt(rowIndex);
+					dataGridViewEmailList.Refresh();
+				}
+
+			}
+		}
+
+		private void dataGridViewEmailList_CellContentClick(object sender, DataGridViewCellEventArgs e)
+		{
+
+		}
+
+		private void buttonRefresh_Click(object sender, EventArgs e)
+		{
+			UpdateEmailList();
+		}
+	}
 }

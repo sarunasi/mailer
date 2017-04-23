@@ -11,23 +11,23 @@ namespace Mailer
 {
     public class DataSaver<T>
     {
-        public void SaveDataList(List<T> dataList)
+        public void SaveDataList(string username, List<T> dataList)
         {
             IFormatter formatter = new BinaryFormatter();
 
-            Stream stream = new FileStream("MyFile.bin", FileMode.Create, FileAccess.Write, FileShare.None);
+            Stream stream = new FileStream(username + ".bin", FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, dataList);
             stream.Close();
 
         }
 
-        public List<T> LoadDataList()
+        public List<T> LoadDataList(string username)
         {
 
                 List<T> data;
 
                 IFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream("MyFile.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
+                Stream stream = new FileStream(username + ".bin", FileMode.Open, FileAccess.Read, FileShare.Read);
                 data = (List<T>)formatter.Deserialize(stream);
                 stream.Close();
 

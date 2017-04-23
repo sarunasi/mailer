@@ -11,100 +11,146 @@ using System.Threading.Tasks;
 
 namespace Mailer
 {
-    class Pop3Communicator : IEmailCommunicator
-    {
-        private StreamWriter writer;
-        private StreamReader reader;
+	public class Pop3Communicator
+	{
+		private StreamWriter writer;
+		private StreamReader reader;
+		private TcpClient tcpClient;
+		private SslStream sslStream;
 
-        private const string Error = "-ERR";
-
-        public Pop3Communicator()
-        {
-
-        }
-
-        public string Connect(string server, int port)
-        {
-            TcpClient tcpclient = new TcpClient();
-            tcpclient.Connect(server, port);
-
-            SslStream sslstream = new SslStream(tcpclient.GetStream());
-
-            sslstream.AuthenticateAsClient(server);
-
-            writer = new StreamWriter(sslstream);
-            reader = new StreamReader(sslstream);
-
-            return reader.ReadLine();
-        }
-
-        public List<ReceivedMail> GetEmails()
-        {
-            string list = Write("LIST");
+		private const string Error = "-ERR";
 
 
+		string username, password, serverAddress;
+		int port;
 
-            if (list.Contains(Error))
-            {
-                throw new IOException("Unable to get emails from the server");
-            }
-            else
-            {
+		private bool connected = false;
 
-                string[] words = list.Split(' ');
+		public Pop3Communicator(string username, string password, string serverAddress, int port)
+		{
+			this.username = username;
+			this.password = password;
+			this.serverAddress = serverAddress;
+			this.port = port;
+		}
 
-                while ((list = reader.ReadLine()) != ".")
-                {
+		public string TryConnection()
+		{
+			Connect();
 
-                }
+			return LogIn();
+		}
 
-                int totalEmails = Int32.Parse(words[1]);
-                Debug.WriteLine("Total emails: " + totalEmails);
+		private string Connect()
+		{
+			if (!connected)
+			{
+				tcpClient = new TcpClient();
+				var result = tcpClient.BeginConnect(serverAddress, port, null, null);
 
-                var emails = new List<ReceivedMail>();
-                EmailDecoder decoder = new EmailDecoder();
+				var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(3));
+				if (!success)
+				{
+					throw new Exception("Couldn't connect to server");
+				}
 
-                for (int i = 1; i <= totalEmails; i++)
-                {
-                    Debug.WriteLine(Write("RETR " + i.ToString()));
+				sslStream = new SslStream(tcpClient.GetStream());
 
-                    StringBuilder header = new StringBuilder();
-                    string nextLine;
-                    while ((nextLine = reader.ReadLine()) != ".")
-                    {
+				sslStream.AuthenticateAsClient(serverAddress);
 
-                        header.AppendLine(nextLine);
+				writer = new StreamWriter(sslStream);
+				reader = new StreamReader(sslStream);
 
-                    }
+				connected = true;
 
+				return reader.ReadLine();
+			}
+			else
+			{
+				Quit();
+				return Connect();
+			}
+			
+		}
 
-                    emails.Add(decoder.Decode(header.ToString()));
+		public List<ReceivedMail> GetEmails()
+		{
+			Connect();
 
-                }
+			LogIn();
 
-                return emails;
+			string list = Write("LIST");
 
-            }
+			if (list.Contains(Error))
+			{
+				throw new IOException("Unable to get emails from the server");
+			}
+			else
+			{
 
-        }
+				string[] words = list.Split(' ');
 
-        public string LogIn(string username, string password)
-        {
-            Write("USER " + username);
-            return Write("PASS " + password);
-        }
+				while ((list = reader.ReadLine()) != ".")
+				{
 
-        public string Quit()
-        {
-           return Write("QUIT");
-        }
+				}
 
-        public string Write(string content)
-        {
-            writer.WriteLine(content);
-            writer.Flush();
+				int totalEmails = Int32.Parse(words[1]);
+				Debug.WriteLine("Total emails: " + totalEmails);
 
-            return reader.ReadLine();
-        }
-    }
+				var emails = new List<ReceivedMail>();
+				EmailDecoder decoder = new EmailDecoder();
+
+				for (int i = 1; i <= totalEmails; i++)
+				{
+					Debug.WriteLine(Write("RETR " + i.ToString()));
+
+					StringBuilder header = new StringBuilder();
+					string nextLine;
+					while ((nextLine = reader.ReadLine()) != ".")
+					{
+
+						header.AppendLine(nextLine);
+
+					} 
+
+					emails.Add(decoder.Decode(header.ToString()));
+
+				}
+
+				Quit();
+
+				return emails;
+			}
+
+		}
+
+		private string LogIn()
+		{
+			string answer = Write("USER " + username);
+			if (answer.StartsWith(Error))
+				return answer;
+			else return Write("PASS " + password);
+		}
+
+		private string Quit()
+		{
+			string answer = Write("QUIT");
+			connected = false;
+
+			sslStream.Close();
+			tcpClient.Close();
+			writer.Close();
+			reader.Close();
+			return answer;
+		}
+
+		public string Write(string content)
+		{
+			writer.WriteLine(content);
+			writer.Flush();
+
+			return reader.ReadLine();
+		}
+	}
 }

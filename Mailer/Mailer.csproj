@@ -52,7 +52,6 @@
       <DependentUpon>ClientForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataSaver.cs" />
-    <Compile Include="IEmailCommunicator.cs" />
     <Compile Include="EmailDecoder.cs" />
     <Compile Include="LogInForm.cs">
       <SubType>Form</SubType>
