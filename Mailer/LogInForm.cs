@@ -63,5 +63,11 @@ namespace Mailer
 		{
 
 		}
+
+		private void LogInForm_FormClosed(object sender, FormClosedEventArgs e)
+		{
+
+			Application.Exit();
+		}
 	}
 }
