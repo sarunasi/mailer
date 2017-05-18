@@ -87,7 +87,7 @@ namespace Mailer
 
 		private void dataGridViewEmailList_CellClick(object sender, DataGridViewCellEventArgs e)
 		{
-			Debug.WriteLine(e.RowIndex);
+	
 
 			if (e.RowIndex >= 0 && e.RowIndex <= dataGridViewEmailList.RowCount)
 			{
@@ -111,7 +111,7 @@ namespace Mailer
 		{
 			if (e.KeyCode == Keys.Delete)
 			{
-				if (dataGridViewEmailList.SelectedCells.Count == 1)
+				if (dataGridViewEmailList.SelectedCells.Count >= 1)
 				{
 					int rowIndex = dataGridViewEmailList.SelectedCells[0].RowIndex;
 					emails.RemoveAt(rowIndex);

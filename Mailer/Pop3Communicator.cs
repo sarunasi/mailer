@@ -114,7 +114,16 @@ namespace Mailer
 
 					} 
 
-					emails.Add(decoder.Decode(header.ToString()));
+                    try
+                    {
+                        emails.Add(decoder.Decode(header.ToString()));
+                    }
+                    catch(ArgumentOutOfRangeException)
+                    {
+
+                    }
+
+					
 
 				}
 

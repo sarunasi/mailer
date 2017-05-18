@@ -44,6 +44,7 @@ namespace Mailer
                 }
                 if (line.Contains("From:"))
                 {
+                    
                     string info = line.Substring(line.IndexOf(':') + 1);
 
                     string address = info.Substring(info.IndexOf('<') + 1, info.IndexOf('>') - info.IndexOf('<') - 1);
@@ -51,15 +52,23 @@ namespace Mailer
 
                     mail.FromAddress = address;
                     mail.FromDisplayName = displayName;
+
+
+                    
                 }
                 if (line.Contains("boundary="))
                 {
                     boundary = line.Substring(line.IndexOf("boundary=") + "boundary=".Length);
+                    Regex rgx = new Regex("[^a-zA-Z0-9]");
+                    boundary = rgx.Replace(boundary, "");
                 }
 
             }
 
-            var bodyStartIndex = header.IndexOf("Content-Type: text/html; charset=UTF-8") + "Content-Type: text/html; charset=UTF-8".Length;
+
+            //var bodyStartIndex = header.IndexOf("Content-Type: text/html; charset=UTF-8") + "Content-Type: text/html; charset=UTF-8".Length;
+            var bodyStartIndex = header.IndexOf("Content-Type: text/html") + "Content-Type: text/html; charset=UTF-8".Length;
+
             var bodyEndIndex = header.IndexOf(boundary, bodyStartIndex) - 2;
 
             string body = header.Substring(bodyStartIndex, bodyEndIndex - bodyStartIndex);
